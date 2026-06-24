@@ -49,6 +49,7 @@ def get_workbooks(
             "modified",
         ],
         limit=limit,
+        ignore_permissions=True,
     )
     # FIX: figure out how to use frappe.qb while respecting permissions
     # TODO: use frappe.qb to get the view count

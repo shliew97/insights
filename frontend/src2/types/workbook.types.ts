@@ -43,6 +43,7 @@ export type WorkbookQuery = {
 	is_native_query?: boolean
 	is_script_query?: boolean
 	is_builder_query?: boolean
+	is_backend_function?: boolean
 }
 
 export type WorkbookChart = {
@@ -85,6 +86,9 @@ export type InsightsQueryv3 = {
 	is_native_query?: boolean
 	is_script_query?: boolean
 	is_builder_query?: boolean
+	is_backend_function?: boolean
+	backend_function_path?: string
+	backend_function_args?: string
 	read_only: boolean
 }
 

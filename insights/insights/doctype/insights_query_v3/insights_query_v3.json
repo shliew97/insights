@@ -13,11 +13,15 @@
   "is_script_query",
   "is_builder_query",
   "is_native_query",
+  "is_backend_function",
   "section_break_cuka",
   "operations",
   "variables",
   "section_break_oujt",
-  "old_name"
+  "old_name",
+  "section_break_sjpd",
+  "backend_function_path",
+  "backend_function_args"
  ],
  "fields": [
   {
@@ -101,6 +105,26 @@
    "fieldname": "folder",
    "fieldtype": "Data",
    "label": "folder"
+  },
+  {
+   "fieldname": "backend_function_path",
+   "fieldtype": "Data",
+   "label": "Backend Function Path"
+  },
+  {
+   "fieldname": "backend_function_args",
+   "fieldtype": "Code",
+   "label": "Backend Function Args"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_backend_function",
+   "fieldtype": "Check",
+   "label": "Is Backend Function"
+  },
+  {
+   "fieldname": "section_break_sjpd",
+   "fieldtype": "Section Break"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -114,7 +138,7 @@
    "link_fieldname": "query"
   }
  ],
- "modified": "2026-04-19 14:06:26.149575",
+ "modified": "2026-06-24 13:45:59.973058",
  "modified_by": "Administrator",
  "module": "Insights",
  "name": "Insights Query v3",

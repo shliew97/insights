@@ -38,12 +38,12 @@ class InsightsQueryv3(Document):
 
     if TYPE_CHECKING:
         from frappe.types import DF
+        from insights.insights.doctype.insights_query_variable.insights_query_variable import InsightsQueryVariable
 
-        from insights.insights.doctype.insights_query_variable.insights_query_variable import (
-            InsightsQueryVariable,
-        )
-
+        backend_function_args: DF.Code | None
+        backend_function_path: DF.Data | None
         folder: DF.Data | None
+        is_backend_function: DF.Check
         is_builder_query: DF.Check
         is_native_query: DF.Check
         is_script_query: DF.Check
@@ -138,7 +138,37 @@ class InsightsQueryv3(Document):
         )
         return [{"data_source": r.data_source, "table_name": r.table_name} for r in rows]
 
+    def _call_backend_function(self):
+        import json
+        
+        function_path = self.backend_function_path or ""
+        args = json.loads(self.backend_function_args) if self.backend_function_args else {}
+        
+        try:
+            response = frappe.call(function_path, **args)
+            if not isinstance(response, list):
+                if isinstance(response, dict):
+                    response = [response]
+                else:
+                    response = [{"result": str(response)}]
+            return response
+        except Exception as e:
+            frappe.log_error(f"Backend function failed: {str(e)}", "Insights")
+            return None
+
     def build(self, active_operation_idx=None, use_live_connection=None):
+        if self.is_backend_function:
+            import pandas as pd
+            
+            response = self._call_backend_function()
+            
+            if response and len(response) > 0:
+                df = pd.DataFrame(response)
+            else:
+                df = pd.DataFrame(columns=["result"])
+            
+            return ibis.memtable(df)
+        
         builder = IbisQueryBuilder(self, active_operation_idx)
         builder.use_live_connection = (
             use_live_connection if use_live_connection is not None else self.use_live_connection

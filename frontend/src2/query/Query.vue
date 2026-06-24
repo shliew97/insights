@@ -4,6 +4,7 @@ import WorkbookQueryEmptyState from '../workbook/WorkbookQueryEmptyState.vue'
 import NativeQueryEditor from './components/NativeQueryEditor.vue'
 import QueryBuilder from './components/QueryBuilder.vue'
 import ScriptQueryEditor from './components/ScriptQueryEditor.vue'
+import BackendFunctionEditor from './components/BackendFunctionEditor.vue'
 import useQuery from './query'
 import { waitUntil } from '../helpers'
 // @ts-ignore
@@ -23,13 +24,15 @@ const queryType = {
 	'query-builder': 'visual',
 	'sql-editor': 'native',
 	'script-editor': 'script',
+	'backend-function': 'backend',
 }
 
-function setQueryType(interfaceType: 'query-builder' | 'sql-editor' | 'script-editor') {
+function setQueryType(interfaceType: 'query-builder' | 'sql-editor' | 'script-editor' | 'backend-function') {
 	if (!query) return
 	query.doc.is_native_query = interfaceType === 'sql-editor'
 	query.doc.is_script_query = interfaceType === 'script-editor'
 	query.doc.is_builder_query = interfaceType === 'query-builder'
+	query.doc.is_backend_function = interfaceType === 'backend-function'
 	capture('query_created', { editor: queryType[interfaceType] })
 }
 </script>
@@ -38,5 +41,6 @@ function setQueryType(interfaceType: 'query-builder' | 'sql-editor' | 'script-ed
 	<QueryBuilder v-if="query.doc.is_builder_query || hasSourceOp" />
 	<NativeQueryEditor v-else-if="query.doc.is_native_query" />
 	<ScriptQueryEditor v-else-if="query.doc.is_script_query" />
+	<BackendFunctionEditor v-else-if="query.doc.is_backend_function" />
 	<WorkbookQueryEmptyState v-else @select="setQueryType" />
 </template>
