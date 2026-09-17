@@ -170,7 +170,8 @@ export function makeQuery(name: string) {
 
 		isServerBusy.value = false
 
-		if (!query.doc.operations.length) {
+		// backend function queries have no operations, their data comes from the function itself
+		if (!query.doc.operations.length && !query.doc.is_backend_function) {
 			result.value = { ...EMPTY_RESULT }
 			return
 		}
@@ -216,10 +217,14 @@ export function makeQuery(name: string) {
 
 			const aggregationPrefixes = aggregations.map((a) => `${a}_`)
 			const isAggregatedSql = Boolean(response.is_aggregated_sql)
+			// a backend function query returns ready to use (usually already aggregated) data,
+			// so its numeric columns can be used as measures directly
+			const isBackendFunctionQuery = Boolean(query.doc.is_backend_function)
+			const isPreAggregated = isAggregatedSql || isBackendFunctionQuery
 			const isMeasureColumn = (column: QueryResultColumn) =>
 				measureColumns.value.includes(column.name) ||
 				aggregationPrefixes.some((prefix) => column.name.startsWith(prefix)) ||
-				(isAggregatedSql && FIELDTYPES.NUMBER.includes(column.type))
+				(isPreAggregated && FIELDTYPES.NUMBER.includes(column.type))
 
 			result.value.columnOptions = result.value.columns.map((column) => {
 				return {
@@ -265,7 +270,7 @@ export function makeQuery(name: string) {
 			await waitUntil(() => query.isloaded)
 		}
 
-		if (!query.doc.operations.length) {
+		if (!query.doc.operations.length && !query.doc.is_backend_function) {
 			result.value.totalRowCount = 0
 			return
 		}

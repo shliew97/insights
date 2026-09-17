@@ -139,36 +139,90 @@ class InsightsQueryv3(Document):
         return [{"data_source": r.data_source, "table_name": r.table_name} for r in rows]
 
     def _call_backend_function(self):
-        import json
-        
-        function_path = self.backend_function_path or ""
-        args = json.loads(self.backend_function_args) if self.backend_function_args else {}
-        
+        """Call the configured backend function and return its records as a list of plain dicts.
+
+        The records are normalised to `[{"column": value, ...}, ...]` so that they can be
+        loaded into an ibis memtable, which in turn allows a backend function query to be
+        used as a source for charts and for other queries (like any other query).
+        """
+        import pandas as pd
+
+        function_path = (self.backend_function_path or "").strip()
+        if not function_path:
+            frappe.throw(frappe._("Backend Function Path is required"))
+
+        args = {}
+        if self.backend_function_args:
+            try:
+                args = frappe.parse_json(self.backend_function_args)
+            except Exception:
+                frappe.throw(frappe._("Backend Function Args is not valid JSON"))
+        if not isinstance(args, dict):
+            frappe.throw(frappe._("Backend Function Args must be a JSON object"))
+
         try:
             response = frappe.call(function_path, **args)
-            if not isinstance(response, list):
-                if isinstance(response, dict):
-                    response = [response]
-                else:
-                    response = [{"result": str(response)}]
-            return response
         except Exception as e:
-            frappe.log_error(f"Backend function failed: {str(e)}", "Insights")
+            frappe.log_error(
+                title="Insights Backend Function Failed",
+                message=f"{function_path}\n\n{frappe.get_traceback()}",
+            )
+            frappe.throw(
+                frappe._("Backend function {0} failed: {1}").format(frappe.bold(function_path), str(e))
+            )
+
+        if response is None:
+            # functions written in frappe style may only set `frappe.response`
+            response = self._get_backend_function_payload()
+
+        if isinstance(response, pd.DataFrame):
+            records = response.to_dict(orient="records")
+        elif isinstance(response, (list, tuple, set)):
+            records = list(response)
+        elif isinstance(response, dict):
+            records = [response]
+        else:
+            records = [{"value": response}]
+
+        return [self._to_plain_record(record) for record in records if record is not None]
+
+    @staticmethod
+    def _get_backend_function_payload():
+        """Fallback for functions that set `frappe.response` instead of returning a value."""
+        response = getattr(frappe.local, "response", None) or {}
+        if not isinstance(response, dict):
             return None
+
+        payload = {
+            key: value
+            for key, value in response.items()
+            if key not in ("docs", "exc", "exc_type", "messages", "success")
+        }
+        return payload or None
+
+    @staticmethod
+    def _to_plain_record(record):
+        """Convert a single record into a plain dict.
+
+        `frappe.db.sql(as_dict=True)` and `frappe.get_all` return `frappe._dict` objects
+        which pandas cannot convert into a dataframe, so they are unwrapped here.
+        """
+        if isinstance(record, dict):
+            return {str(key): value for key, value in record.items()}
+        if isinstance(record, (list, tuple)):
+            # no column names available for positional rows (e.g. frappe.db.sql without as_dict)
+            return {f"column_{idx + 1}": value for idx, value in enumerate(record)}
+        return {"value": record}
 
     def build(self, active_operation_idx=None, use_live_connection=None):
         if self.is_backend_function:
             import pandas as pd
-            
-            response = self._call_backend_function()
-            
-            if response and len(response) > 0:
-                df = pd.DataFrame(response)
-            else:
-                df = pd.DataFrame(columns=["result"])
-            
+
+            records = self._call_backend_function()
+            df = pd.DataFrame(records) if records else pd.DataFrame(columns=["result"])
+
             return ibis.memtable(df)
-        
+
         builder = IbisQueryBuilder(self, active_operation_idx)
         builder.use_live_connection = (
             use_live_connection if use_live_connection is not None else self.use_live_connection
