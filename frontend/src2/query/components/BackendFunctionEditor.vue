@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useTimeAgo } from '@vueuse/core'
 import { Play } from 'lucide-vue-next'
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject } from 'vue'
 import Code from '../../components/Code.vue'
 import ContentEditable from '../../components/ContentEditable.vue'
 import InlineFormControlLabel from '../../components/InlineFormControlLabel.vue'
@@ -10,31 +10,31 @@ import { Query } from '../query'
 import QueryDataTable from './QueryDataTable.vue'
 
 const query = inject<Query>('query')!
-const doc = query.doc as any
 
 const DEFAULT_FUNCTION_PATH = 'healthland_pos.pos.ping'
 const DEFAULT_FUNCTION_ARGS = '{"from_date": "2026-05-01", "to_date": "2026-06-30", "outlet": "KD"}'
 
-const functionPath = ref(doc.backend_function_path || DEFAULT_FUNCTION_PATH)
-const functionArgs = ref(doc.backend_function_args || DEFAULT_FUNCTION_ARGS)
-
 // the flag is set by the query type selector, keep it on the doc so it is saved with the query
-doc.is_backend_function = 1
+query.doc.is_backend_function = true
 
-watch(
-	[functionPath, functionArgs],
-	([path, args]) => {
-		doc.backend_function_path = path
-		doc.backend_function_args = args
-	},
-	{ immediate: true },
-)
+// fill the sample defaults into a brand new query
+if (!query.doc.backend_function_path) {
+	query.doc.backend_function_path = DEFAULT_FUNCTION_PATH
+}
+if (!query.doc.backend_function_args) {
+	query.doc.backend_function_args = DEFAULT_FUNCTION_ARGS
+}
+
+// NOTE: always read/write through query.doc. The doc object is replaced with a new
+// object every time the query is saved, so capturing `query.doc` into a variable
+// silently redirects later edits into a stale object and they never get saved.
 
 const argsError = computed(() => {
-	if (!functionArgs.value?.trim()) return ''
+	const args = query.doc.backend_function_args
+	if (!args?.trim()) return ''
 	try {
-		const args = JSON.parse(functionArgs.value)
-		if (!args || typeof args !== 'object' || Array.isArray(args)) {
+		const parsed = JSON.parse(args)
+		if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
 			return __('Arguments must be a JSON object')
 		}
 		return ''
@@ -44,7 +44,7 @@ const argsError = computed(() => {
 })
 
 function run() {
-	if (!functionPath.value || argsError.value) return
+	if (!query.doc.backend_function_path || argsError.value) return
 	query.execute(true)
 }
 
@@ -68,7 +68,7 @@ query.execute()
 			<div class="flex flex-col gap-3 p-4">
 				<InlineFormControlLabel :label="__('Function Path')">
 					<FormControl
-						v-model="functionPath"
+						v-model="query.doc.backend_function_path"
 						type="text"
 						placeholder="e.g. healthland_pos.pos.get_sales_summary"
 					/>
@@ -84,7 +84,7 @@ query.execute()
 				<div class="flex flex-col gap-1.5">
 					<div class="text-xs text-gray-600">{{ __('Arguments (JSON)') }}</div>
 					<div class="h-20 overflow-hidden rounded border">
-						<Code v-model="functionArgs" language="javascript" />
+						<Code v-model="query.doc.backend_function_args" language="javascript" />
 					</div>
 					<p v-if="argsError" class="text-xs text-red-600">{{ argsError }}</p>
 					<p v-else class="text-xs text-gray-500">
@@ -96,7 +96,7 @@ query.execute()
 			<div class="flex flex-shrink-0 gap-1 border-t p-1">
 				<Button
 					@click="run"
-					:disabled="!functionPath || Boolean(argsError)"
+					:disabled="!query.doc.backend_function_path || Boolean(argsError)"
 					:loading="query.executing"
 				>
 					<template #prefix>
