@@ -395,8 +395,51 @@ def has_doc_permission(doc, ptype, user):
     return InsightsPermissions(user).has_doc_permission(doc, ptype)
 
 
-def get_permission_query_conditions(user, doctype):
+def get_permission_query_conditions(user=None, doctype=None):
+    """Permission query condition for an Insights doctype.
+
+    Newer frappe versions call this hook with ``doctype`` as a keyword argument.
+    Older frappe (as installed here) only passes ``user``; the per-doctype
+    wrappers below supply the doctype in that case. Returning ``""`` means "no
+    filter" and defers to the doc-level ``has_permission`` hook.
+    """
+    if not doctype or doctype not in PERMISSION_DOCTYPES:
+        return ""
     return InsightsPermissions(user).get_permission_query_conditions(doctype)
+
+
+# One thin wrapper per doctype so the hook works with frappe versions that only
+# pass ``user`` (the doctype is otherwise unavailable to a shared hook).
+def get_data_source_permission_query_conditions(user=None, doctype=None):
+    return InsightsPermissions(user).get_permission_query_conditions("Insights Data Source v3")
+
+
+def get_table_permission_query_conditions(user=None, doctype=None):
+    return InsightsPermissions(user).get_permission_query_conditions("Insights Table v3")
+
+
+def get_team_permission_query_conditions(user=None, doctype=None):
+    return InsightsPermissions(user).get_permission_query_conditions("Insights Team")
+
+
+def get_workbook_permission_query_conditions(user=None, doctype=None):
+    return InsightsPermissions(user).get_permission_query_conditions("Insights Workbook")
+
+
+def get_query_permission_query_conditions(user=None, doctype=None):
+    return InsightsPermissions(user).get_permission_query_conditions("Insights Query v3")
+
+
+def get_chart_permission_query_conditions(user=None, doctype=None):
+    return InsightsPermissions(user).get_permission_query_conditions("Insights Chart v3")
+
+
+def get_dashboard_permission_query_conditions(user=None, doctype=None):
+    return InsightsPermissions(user).get_permission_query_conditions("Insights Dashboard v3")
+
+
+def get_alert_permission_query_conditions(user=None, doctype=None):
+    return InsightsPermissions(user).get_permission_query_conditions("Insights Alert")
 
 
 def check_app_permission():

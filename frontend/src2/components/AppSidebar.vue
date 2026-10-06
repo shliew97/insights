@@ -52,9 +52,11 @@ import {
 	DatabaseZap,
 	LayoutGrid,
 	PanelRightOpen,
+	Repeat,
 	SettingsIcon,
 } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import useRetentionDashboard from '../composables/useRetentionDashboard'
 import useSettings from '../settings/settings'
 import Settings from '../settings/Settings.vue'
 import SidebarLink from './SidebarLink.vue'
@@ -68,12 +70,18 @@ const showSettingsDialog = ref(false)
 
 const settings = useSettings()
 const is_fc_site = window.is_fc_site
+const { openRetentionDashboard } = useRetentionDashboard()
 
 const links = ref([
 	{
 		label: __('Dashboards'),
 		icon: LayoutGrid,
 		to: 'DashboardList',
+	},
+	{
+		label: __('Customer Retention'),
+		icon: Repeat,
+		onClick: openRetentionDashboard,
 	},
 	{
 		label: __('Workbooks'),

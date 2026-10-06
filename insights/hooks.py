@@ -112,14 +112,14 @@ fixtures = [
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
-    "Insights Data Source v3": "insights.permissions.get_permission_query_conditions",
-    "Insights Table v3": "insights.permissions.get_permission_query_conditions",
-    "Insights Team": "insights.permissions.get_permission_query_conditions",
-    "Insights Workbook": "insights.permissions.get_permission_query_conditions",
-    "Insights Query v3": "insights.permissions.get_permission_query_conditions",
-    "Insights Chart v3": "insights.permissions.get_permission_query_conditions",
-    "Insights Dashboard v3": "insights.permissions.get_permission_query_conditions",
-    "Insights Alert": "insights.permissions.get_permission_query_conditions",
+    "Insights Data Source v3": "insights.permissions.get_data_source_permission_query_conditions",
+    "Insights Table v3": "insights.permissions.get_table_permission_query_conditions",
+    "Insights Team": "insights.permissions.get_team_permission_query_conditions",
+    "Insights Workbook": "insights.permissions.get_workbook_permission_query_conditions",
+    "Insights Query v3": "insights.permissions.get_query_permission_query_conditions",
+    "Insights Chart v3": "insights.permissions.get_chart_permission_query_conditions",
+    "Insights Dashboard v3": "insights.permissions.get_dashboard_permission_query_conditions",
+    "Insights Alert": "insights.permissions.get_alert_permission_query_conditions",
 }
 
 has_permission = {

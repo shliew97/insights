@@ -2,7 +2,9 @@
 # For license information, please see license.txt
 
 import base64
+import threading
 from contextlib import contextmanager, suppress
+from functools import wraps
 from io import BytesIO
 
 import frappe
@@ -28,6 +30,22 @@ from insights.insights.query_utils import (
     transitive_closure,
 )
 from insights.utils import deep_convert_dict_to_dict
+
+# Building/executing Insights queries is not thread-safe: backend-function
+# queries materialise an ibis/duckdb memtable and concurrent executions in the
+# same process deadlock (the dev server stops responding). Serialising query
+# execution per process fixes it; queries are fast, so the throughput cost is
+# negligible.
+_QUERY_EXECUTION_LOCK = threading.RLock()
+
+
+def _serialized_execution(fn):
+    @wraps(fn)
+    def wrapper(self, *args, **kwargs):
+        with _QUERY_EXECUTION_LOCK:
+            return fn(self, *args, **kwargs)
+
+    return wrapper
 
 
 class InsightsQueryv3(Document):
@@ -214,6 +232,7 @@ class InsightsQueryv3(Document):
             return {f"column_{idx + 1}": value for idx, value in enumerate(record)}
         return {"value": record}
 
+    @_serialized_execution
     def build(self, active_operation_idx=None, use_live_connection=None):
         if self.is_backend_function:
             import pandas as pd
@@ -235,6 +254,7 @@ class InsightsQueryv3(Document):
         return ibis_query
 
     @frappe.whitelist()
+    @_serialized_execution
     def execute(
         self,
         active_operation_idx: int | None = None,
@@ -282,6 +302,7 @@ class InsightsQueryv3(Document):
         return sqlparse.format(str(raw_sql), reindent=True, keyword_case="upper")
 
     @insights_whitelist()
+    @_serialized_execution
     def get_count(self, active_operation_idx: int | None = None, adhoc_filters: dict | None = None):
         with set_adhoc_filters(adhoc_filters):
             ibis_query = self.build(active_operation_idx)
@@ -343,6 +364,7 @@ class InsightsQueryv3(Document):
             return results.to_csv(index=False)
 
     @insights_whitelist()
+    @_serialized_execution
     def get_distinct_column_values(
         self,
         column_name: str,

@@ -85,7 +85,7 @@ class IbisQueryBuilder:
                 if adhoc_filters["filters"]:
                     operations.append(adhoc_filters)
 
-        self.operations = operations
+        self.operations = operations or []
 
     def build(self) -> IbisQuery:
         if not hasattr(frappe.local, "_insights_building_queries"):
