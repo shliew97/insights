@@ -53,9 +53,11 @@ import {
 	LayoutGrid,
 	PanelRightOpen,
 	Repeat,
+	SearchCheck,
 	SettingsIcon,
 } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import useAdsKeywordsDashboard from '../composables/useAdsKeywordsDashboard'
 import useRetentionDashboard from '../composables/useRetentionDashboard'
 import useSettings from '../settings/settings'
 import Settings from '../settings/Settings.vue'
@@ -71,6 +73,7 @@ const showSettingsDialog = ref(false)
 const settings = useSettings()
 const is_fc_site = window.is_fc_site
 const { openRetentionDashboard } = useRetentionDashboard()
+const { openAdsKeywordsDashboard } = useAdsKeywordsDashboard()
 
 const links = ref([
 	{
@@ -82,6 +85,11 @@ const links = ref([
 		label: __('Customer Retention'),
 		icon: Repeat,
 		onClick: openRetentionDashboard,
+	},
+	{
+		label: __('Google Ads Keywords'),
+		icon: SearchCheck,
+		onClick: openAdsKeywordsDashboard,
 	},
 	{
 		label: __('Workbooks'),

@@ -1,0 +1,155 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-10 09:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "credentials_section",
+  "developer_token",
+  "client_id",
+  "client_secret",
+  "refresh_token",
+  "account_section",
+  "login_customer_id",
+  "customer_id",
+  "query_section",
+  "api_version",
+  "default_resource",
+  "default_date_range",
+  "max_rows"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "description": "Turn the Google Ads keyword analysis on or off.",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "credentials_section",
+   "fieldtype": "Section Break",
+   "label": "API Credentials"
+  },
+  {
+   "description": "From your Google Ads manager account (Tools & Settings > API Center).",
+   "fieldname": "developer_token",
+   "fieldtype": "Password",
+   "label": "Developer Token"
+  },
+  {
+   "description": "OAuth2 client id of the Google Cloud project with the Google Ads API enabled.",
+   "fieldname": "client_id",
+   "fieldtype": "Data",
+   "label": "Client ID"
+  },
+  {
+   "fieldname": "client_secret",
+   "fieldtype": "Password",
+   "label": "Client Secret"
+  },
+  {
+   "description": "OAuth2 refresh token for the Google Ads scope. Use the Get Refresh Token button to mint or replace it.",
+   "fieldname": "refresh_token",
+   "fieldtype": "Password",
+   "label": "Refresh Token"
+  },
+  {
+   "fieldname": "account_section",
+   "fieldtype": "Section Break",
+   "label": "Account"
+  },
+  {
+   "description": "Manager (MCC) account id used to access the account below, if any. Digits only.",
+   "fieldname": "login_customer_id",
+   "fieldtype": "Data",
+   "label": "Login Customer ID (MCC)"
+  },
+  {
+   "description": "The Google Ads account id to analyse. Digits only (dashes are fine).",
+   "fieldname": "customer_id",
+   "fieldtype": "Data",
+   "label": "Customer ID",
+   "reqd": 0
+  },
+  {
+   "fieldname": "query_section",
+   "fieldtype": "Section Break",
+   "label": "Query Defaults"
+  },
+  {
+   "default": "v23",
+   "description": "Google Ads API version. Leave as is - the app auto-detects a working version if this one is retired.",
+   "fieldname": "api_version",
+   "fieldtype": "Data",
+   "label": "API Version"
+  },
+  {
+   "default": "search_term_view",
+   "description": "search_term_view = what users actually typed; keyword_view = the keywords you bid on.",
+   "fieldname": "default_resource",
+   "fieldtype": "Select",
+   "label": "Default Resource",
+   "options": "search_term_view\nkeyword_view"
+  },
+  {
+   "default": "LAST_30_DAYS",
+   "description": "Any Google Ads date-range literal, e.g. LAST_7_DAYS, LAST_30_DAYS, THIS_MONTH.",
+   "fieldname": "default_date_range",
+   "fieldtype": "Data",
+   "label": "Default Date Range"
+  },
+  {
+   "default": "500",
+   "fieldname": "max_rows",
+   "fieldtype": "Int",
+   "label": "Max Rows",
+   "non_negative": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-07-10 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Insights",
+ "name": "Google Ads Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Insights Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Insights User",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
