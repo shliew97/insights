@@ -9,8 +9,8 @@ import './index.css'
 import router from './router.ts'
 import { translationPlugin } from './translation.ts'
 //@ts-ignore
-import { telemetryPlugin } from 'frappe-ui/frappe'
-import session from './session.ts'
+// import { telemetryPlugin } from 'frappe-ui/frappe'
+// import session from './session.ts'
 
 setConfig('resourceFetcher', frappeRequest)
 
@@ -23,12 +23,12 @@ app.use(spritePlugin)
 app.component('grid-layout', GridLayout)
 app.component('grid-item', GridItem)
 
-const stop = watchEffect(() => {
-	if (session.isLoggedIn) {
-		app.use(telemetryPlugin, { app_name: 'insights' })
-		stop()
-	}
-})
+// const stop = watchEffect(() => {
+// 	if (session.isLoggedIn) {
+// 		app.use(telemetryPlugin, { app_name: 'insights' })
+// 		stop()
+// 	}
+// })
 
 app.config.errorHandler = (err, vm, info) => {
 	console.groupCollapsed('Unhandled Error in: ', info)

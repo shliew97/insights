@@ -71,8 +71,21 @@ _MONTH_COLUMN_RE = re.compile(r"^month_(\d+)(_pct|_retained)?$")
 _MONTH_SUFFIX = {"_pct": " pct", "_retained": " retained"}
 
 
+class _Rows(list):
+    """List of row dicts that also carries the column names of the result.
+
+    Insights uses ``columns`` to keep the schema of an empty result, so queries
+    built on top of a backend function don't fail with "Column X does not exist".
+    """
+
+    def __init__(self, rows=(), columns=()):
+        super().__init__(rows)
+        self.columns = list(columns)
+
+
 def _rename(rows: list[dict], mapping: dict) -> list[dict]:
-    return [{mapping.get(key, key): value for key, value in row.items()} for row in rows]
+    renamed = [{mapping.get(key, key): value for key, value in row.items()} for row in rows]
+    return _Rows(renamed, mapping.values())
 
 
 def _rename_cohort_columns(rows: list[dict]) -> list[dict]:
@@ -92,6 +105,26 @@ def _rename_cohort_columns(rows: list[dict]) -> list[dict]:
                 new_row[key] = value
         renamed.append(new_row)
     return renamed
+
+
+# Table B always exposes at least these "Month N" columns, even when the cohort is
+# empty or too young to have them yet, so charts built on it never lose a column.
+MIN_MONTH_COLUMNS = 6
+
+
+def _with_month_columns(rows: list[dict], include_month_0=None) -> list[dict]:
+    """Pad Table B rows to a stable set of columns (and keep it for empty results)."""
+    first = 0 if include_month_0 else 1
+    wanted = ["First visit month", "Customers"]
+    for index in range(first, MIN_MONTH_COLUMNS + 1):
+        wanted += [f"Month {index}"]
+    padded = []
+    for row in rows:
+        row = dict(row)
+        for column in wanted:
+            row.setdefault(column, "")
+        padded.append(row)
+    return _Rows(padded, wanted)
 
 
 def _build_coverage(records, brands) -> dict:
@@ -170,7 +203,7 @@ def monthly_cohort_retention(filters=None, **kwargs):
     merged = _merge_args(filters, kwargs)
     result = analyse_filters(merged)
     scope = _filters_from(result, merged)
-    return _rename_cohort_columns(
+    rows = _rename_cohort_columns(
         engine.monthly_cohort_retention(
             result,
             scope=merged.get("scope") or "brand",
@@ -179,6 +212,7 @@ def monthly_cohort_retention(filters=None, **kwargs):
             **scope,
         )
     )
+    return _with_month_columns(rows, merged.get("include_month_0"))
 
 
 def _drill_down(filters, kwargs, dimension):

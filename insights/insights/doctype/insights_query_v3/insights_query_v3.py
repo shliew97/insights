@@ -48,6 +48,14 @@ def _serialized_execution(fn):
     return wrapper
 
 
+class _EmptyRecords(list):
+    """An empty list of records that remembers the columns of the result."""
+
+    def __init__(self, columns):
+        super().__init__()
+        self.columns = list(columns)
+
+
 class InsightsQueryv3(Document):
     # begin: auto-generated types
     # This code is auto-generated. Do not modify anything in this block.
@@ -202,7 +210,11 @@ class InsightsQueryv3(Document):
         else:
             records = [{"value": response}]
 
-        return [self._to_plain_record(record) for record in records if record is not None]
+        plain = [self._to_plain_record(record) for record in records if record is not None]
+        columns = getattr(response, "columns", None)
+        if not plain and isinstance(columns, (list, tuple)) and columns:
+            plain = _EmptyRecords(columns)
+        return plain
 
     @staticmethod
     def _get_backend_function_payload():
@@ -238,7 +250,18 @@ class InsightsQueryv3(Document):
             import pandas as pd
 
             records = self._call_backend_function()
-            df = pd.DataFrame(records) if records else pd.DataFrame(columns=["result"])
+            if records:
+                df = pd.DataFrame(records)
+                # a column that is None in every row has no type, so ibis infers a
+                # `null` column which can't be aggregated (e.g. median_days = None).
+                # Treat it as numeric (NaN) so sum/avg/etc. work and yield null.
+                for column in df.columns[df.isna().all()]:
+                    df[column] = df[column].astype("float64")
+            else:
+                # keep the declared schema for empty results, so downstream
+                # operations (summarize, charts...) don't fail on missing columns
+                columns = list(getattr(records, "columns", None) or ["result"])
+                df = pd.DataFrame(columns=columns)
 
             return ibis.memtable(df)
 
