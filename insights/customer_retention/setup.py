@@ -26,9 +26,8 @@ DEFAULT_FILTERS = {
     # demo=False queries the real HealthLand POS data. Set demo=True to explore
     # the dashboard with deterministic synthetic data instead.
     "demo": False,
-    # brand must match the value resolved by sources.resolve_brand
-    # (outlets whose name contains "SOMA" -> "SOMA", everything else -> "HealthLand").
-    "brand": "SOMA",
+    # No "brand" filter by default: all outlets are included. To restrict to one brand,
+    # add e.g. "brand": "SOMA" (resolved by sources.resolve_brand).
     "window": 90,
     "scope": "brand",
 }
