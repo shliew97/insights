@@ -102,7 +102,7 @@ def fetch_visit_records(filters=None) -> list[dict]:
         "b.member != ''",
         "b.appointment_from IS NOT NULL",
         "b.appointment_from >= %(from_date)s",
-        "b.appointment_from < %(to_date)s",
+        "b.appointment_from < DATE_ADD(DATE(%(to_date)s), INTERVAL 1 DAY)",  # to_date is inclusive
         "b.status = %(status)s",
     ]
     params = {"from_date": from_date, "to_date": to_date, "status": _QUALIFYING_STATUS}
@@ -148,7 +148,7 @@ def get_data_complete_through(filters=None):
     params = {"status": _QUALIFYING_STATUS}
     conditions = ["status = %(status)s", "appointment_from IS NOT NULL"]
     if filters.get("to_date"):
-        conditions.append("appointment_from < %(to_date)s")
+        conditions.append("appointment_from < DATE_ADD(DATE(%(to_date)s), INTERVAL 1 DAY)")  # inclusive
         params["to_date"] = filters["to_date"]
     if filters.get("outlet"):
         conditions.append("outlet = %(outlet)s")
