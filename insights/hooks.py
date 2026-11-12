@@ -155,6 +155,12 @@ doc_events = {
 # ---------------
 
 scheduler_events = {
+    "cron": {
+        # precompute the customer retention dashboard data (read from file afterwards)
+        "30 5 * * *": [
+            "insights.customer_retention.cache.refresh_all",
+        ],
+    },
     "all": [
         "insights.insights.doctype.insights_alert.insights_alert.send_alerts",
     ],

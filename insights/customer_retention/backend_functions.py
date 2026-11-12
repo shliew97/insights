@@ -21,11 +21,12 @@ seeded dashboard is explorable before the source mapping is confirmed.
 
 from __future__ import annotations
 
+import functools
 import re
 
 import frappe
 
-from insights.customer_retention import engine, sources
+from insights.customer_retention import cache, engine, sources
 from insights.decorators import insights_whitelist
 
 
@@ -107,6 +108,35 @@ def _rename_cohort_columns(rows: list[dict]) -> list[dict]:
     return renamed
 
 
+def _cached(fn):
+    """Serve the result from the daily file cache (see ``cache.py``) when available.
+
+    * cache hit -> the stored rows are returned without touching the database
+    * cache miss -> computed as usual and stored for the next call
+    * ``cache.refresh_all`` (scheduled job) ignores the stored file and recomputes
+    * ``demo`` data is never cached
+    """
+
+    @functools.wraps(fn)
+    def wrapper(filters=None, **kwargs):
+        merged = _merge_args(filters, kwargs)
+        if merged.get("demo"):
+            return fn(merged)
+
+        if not frappe.flags.get(cache.REFRESH_FLAG):
+            hit = cache.read(fn.__name__, merged)
+            if hit is not None:
+                rows, columns = hit
+                return _Rows(rows, columns)
+
+        rows = fn(merged)
+        cache.write(fn.__name__, merged, rows, getattr(rows, "columns", None))
+        return rows
+
+    return wrapper
+
+
+
 # Table B always exposes at least these "Month N" columns, even when the cohort is
 # empty or too young to have them yet, so charts built on it never lose a column.
 MIN_MONTH_COLUMNS = 6
@@ -178,6 +208,7 @@ def _filters_from(result, filters) -> dict:
 
 
 @insights_whitelist()
+@_cached
 def customer_summaries(filters=None, **kwargs):
     """Derived one-row-per-customer-per-brand summary."""
     merged = _merge_args(filters, kwargs)
@@ -187,6 +218,7 @@ def customer_summaries(filters=None, **kwargs):
 
 
 @insights_whitelist()
+@_cached
 def second_visit_conversion(filters=None, **kwargs):
     """Table A - cumulative second-visit conversion by cohort month."""
     merged = _merge_args(filters, kwargs)
@@ -198,6 +230,7 @@ def second_visit_conversion(filters=None, **kwargs):
 
 
 @insights_whitelist()
+@_cached
 def monthly_cohort_retention(filters=None, **kwargs):
     """Table B - monthly cohort retention by cohort month."""
     merged = _merge_args(filters, kwargs)
@@ -226,18 +259,21 @@ def _drill_down(filters, kwargs, dimension):
 
 
 @insights_whitelist()
+@_cached
 def outlet_drill_down(filters=None, **kwargs):
     """Table C - originating outlet drill-down for the selected window."""
     return _drill_down(filters, kwargs, "outlet")
 
 
 @insights_whitelist()
+@_cached
 def therapist_drill_down(filters=None, **kwargs):
     """Table C - originating therapist drill-down for the selected window."""
     return _drill_down(filters, kwargs, "therapist")
 
 
 @insights_whitelist()
+@_cached
 def return_interval_distribution(filters=None, **kwargs):
     """First-to-second visit interval distribution (bar chart source)."""
     merged = _merge_args(filters, kwargs)
@@ -247,6 +283,7 @@ def return_interval_distribution(filters=None, **kwargs):
 
 
 @insights_whitelist()
+@_cached
 def retention_headline(filters=None, **kwargs):
     """Median return time and share returning within the full window."""
     merged = _merge_args(filters, kwargs)
@@ -256,6 +293,7 @@ def retention_headline(filters=None, **kwargs):
 
 
 @insights_whitelist()
+@_cached
 def data_quality(filters=None, **kwargs):
     """Data-quality indicators (cutoff, unresolved identities, immature windows)."""
     merged = _merge_args(filters, kwargs)
