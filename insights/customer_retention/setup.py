@@ -184,12 +184,12 @@ def get_workbook_definition(filters: dict | None = None) -> dict:
     table_c_rows = [
         _dim("Origin Group"),
         _dim("Eligible", data_type="Integer"),
-        _dim("Brand return", data_type="Decimal"),
-        _dim("Same provider return", data_type="Decimal"),
-        _dim("2nd visit same provider", data_type="Integer"),
-        _dim("2nd visit different provider", data_type="Integer"),
-        _dim("2nd visit unknown/multiple", data_type="Integer"),
-        _dim("No brand return", data_type="Integer"),
+        _dim("Brand return"),
+        _dim("Same provider return"),
+        _dim("2nd visit same provider"),
+        _dim("2nd visit different provider"),
+        _dim("2nd visit unknown/multiple"),
+        _dim("No brand return"),
     ]
     quality_rows = [
         _dim("Indicator"),

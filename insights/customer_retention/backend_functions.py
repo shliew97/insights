@@ -58,12 +58,12 @@ TABLE_A_LABELS = {
 TABLE_C_LABELS = {
     "origin_group": "Origin Group",
     "eligible": "Eligible",
-    "brand_return_pct": "Brand return",
-    "same_provider_return_pct": "Same provider return",
-    "second_visit_same_provider": "2nd visit same provider",
-    "second_visit_different_provider": "2nd visit different provider",
-    "second_visit_unknown_or_multiple": "2nd visit unknown/multiple",
-    "no_brand_return": "No brand return",
+    "brand_return_display": "Brand return",
+    "same_provider_return_display": "Same provider return",
+    "second_visit_same_provider_display": "2nd visit same provider",
+    "second_visit_different_provider_display": "2nd visit different provider",
+    "second_visit_unknown_or_multiple_display": "2nd visit unknown/multiple",
+    "no_brand_return_display": "No brand return",
 }
 
 QUALITY_LABELS = {"indicator": "Indicator", "value": "Value", "note": "Note"}

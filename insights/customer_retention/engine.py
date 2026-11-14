@@ -127,6 +127,13 @@ def _pct(count, denom):
     return round(100 * count / denom, 1)
 
 
+def _pct_display(count: int, denom: int) -> str:
+    """Human readable ``45.6% (52/114)`` cell used by the drill-down tables."""
+    if not denom:
+        return "Not applicable"
+    return f"{_pct(count, denom):.1f}% ({count}/{denom})"
+
+
 # ---------------------------------------------------------------------------
 # Dataclasses
 # ---------------------------------------------------------------------------
@@ -672,11 +679,12 @@ def drill_down(
                 "return_window_days": window,
                 "brand_return": brand_return,
                 "brand_return_pct": _pct(brand_return, eligible),
-                "brand_return_display": f"{_pct(brand_return, eligible):.1f}% ({brand_return}/{eligible})"
-                if eligible
-                else "Not applicable",
+                "brand_return_display": _pct_display(brand_return, eligible),
                 "same_provider_return": None if unavailable else same_provider,
                 "same_provider_return_pct": None if unavailable else _pct(same_provider, eligible),
+                "same_provider_return_display": (
+                    "Not applicable" if unavailable else _pct_display(same_provider, eligible)
+                ),
                 "same_provider_available": 0 if unavailable else 1,
                 "second_visit_same_provider": dest_same,
                 "second_visit_different_provider": dest_diff,
@@ -686,6 +694,10 @@ def drill_down(
                 "second_visit_different_provider_pct": _pct(dest_diff, eligible),
                 "second_visit_unknown_or_multiple_pct": _pct(dest_unknown, eligible),
                 "no_brand_return_pct": _pct(no_return, eligible),
+                "second_visit_same_provider_display": _pct_display(dest_same, eligible),
+                "second_visit_different_provider_display": _pct_display(dest_diff, eligible),
+                "second_visit_unknown_or_multiple_display": _pct_display(dest_unknown, eligible),
+                "no_brand_return_display": _pct_display(no_return, eligible),
                 "small_sample": int(eligible < config.small_sample_threshold),
             }
         )
